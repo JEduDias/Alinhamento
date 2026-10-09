@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Alinhamentos e Deliberações do Setor</title>
+    <style>
+        :root {
+            --copel-green: #008751;
+            --copel-orange: #f37021;
+            --copel-dark: #2c3e50;
+            --bg-light: #f4f6f9;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            background-color: var(--copel-dark);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            color: var(--copel-dark);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--copel-green);
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--copel-green);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .btn {
+            background-color: var(--copel-green);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #006b40;
+        }
+
+        .btn-secondary {
+            background-color: var(--copel-orange);
+        }
+
+        .btn-secondary:hover {
+            background-color: #d65c10;
+        }
+
+        .alignment-item {
+            border-left: 4px solid var(--copel-green);
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 0 5px 5px 0;
+            margin-bottom: 15px;
+        }
+
+        .alignment-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #777;
+            margin-bottom: 8px;
+        }
+
+        .alignment-subject {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--copel-dark);
+            margin-bottom: 5px;
+        }
+
+        .alignment-decision {
+            font-size: 0.95rem;
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .alignment-reason {
+            font-size: 0.85rem;
+            color: #555;
+            background: #eef2f5;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+
+        .history-link {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--copel-orange);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .history-box {
+            display: none;
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px dashed #ccc;
+        }
+
+        .badge {
+            background-color: var(--copel-green);
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .badge-update {
+            background-color: var(--copel-orange);
+        }
+
+        .loading-text {
+            color: #777;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Central de Alinhamentos & Deliberações do Setor</h1>
+        <button class="btn btn-secondary" onclick="toggleForm()">+ Novo Alinhamento</button>
+    </header>
+
+    <!-- Modal/Card de Cadastro -->
+    <div class="card" id="formCard" style="display: none;">
+        <div class="card-title">
+            <span id="formTitle">Registrar Novo Alinhamento / Atualização</span>
+            <button class="btn" style="padding: 3px 8px; font-size: 0.8rem;" onclick="toggleForm()">X</button>
+        </div>
+        <form id="alignmentForm">
+            <div class="form-group">
+                <label for="assunto">Assunto:</label>
+                <input type="text" id="assunto" placeholder="Ex: Liberação de múltiplas entradas de energia" required>
+            </div>
+            <div class="form-group">
+                <label for="decisao">Decisão:</label>
+                <textarea id="decisao" rows="3" placeholder="Descreva o que foi decidido na reunião..." required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="motivo">Motivo (Opcional):</label>
+                <textarea id="motivo" rows="2" placeholder="Motivo da liberação ou do novo entendimento..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="responsavel">Matrícula:</label>
+                <input type="text" id="responsavel" placeholder="Ex: Registro Copel" required>
+            </div>
+            <button type="submit" class="btn" id="btnSalvar">Salvar Alinhamento</button>
+        </form>
+    </div>
+
+    <!-- Card de Pesquisa e Lista de Decisões -->
+    <div class="card">
+        <div class="card-title">Buscar Alinhamentos Vigentes</div>
+        <div class="search-box">
+            <input type="text" id="searchInput" onkeyup="buscarAlinhamentos()" placeholder="Pesquisar assunto, norma ou decisão...">
+        </div>
+        <div id="resultsContainer">
+            <p class="loading-text">Carregando alinhamentos...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // URL de Integração
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAXxJjQS2KsUrzTH4foDN80SdrPn5GkGVOP4obnz0V1J3pIwKHOUkguhilUa5THPQl/exec";
+
+    // Base de dados carregada
+    let baseAlinhamentos = [];
+
+    // Função para tratar e formatar qualquer data para o padrão 00/00/0000 (Sem Horário)
+    function formatarDataSemHora(strData) {
+        if (!strData) return 'N/I';
+        
+        const d = new Date(strData);
+        if (!isNaN(d.getTime())) {
+            const dia = String(d.getDate()).padStart(2, '0');
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const ano = d.getFullYear();
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        if (typeof strData === 'string' && strData.includes('-')) {
+            const partes = strData.split(' ')[0].split('T')[0].split('-');
+            if (partes.length === 3) {
+                return `${partes[2].padStart(2, '0')}/${partes[1].padStart(2, '0')}/${partes[0]}`;
+            }
+        }
+
+        if (typeof strData === 'string' && strData.includes('/')) {
+            return strData.split(' ')[0];
+        }
+
+        return strData;
+    }
+
+    // Função para buscar dados cadastrados
+    function carregarAlinhamentos() {
+        fetch(APPS_SCRIPT_URL)
+            .then(res => res.json())
+            .then(dados => {
+                baseAlinhamentos = dados;
+                renderizarAlinhamentos();
+            })
+            .catch(err => {
+                console.error("Erro ao carregar dados:", err);
+                document.getElementById("resultsContainer").innerHTML = 
+                    "<p style='color: red; text-align: center; padding: 20px;'>Erro ao carregar os alinhamentos. Tente novamente mais tarde.</p>";
+            });
+    }
+
+    function toggleForm() {
+        const formCard = document.getElementById("formCard");
+        formCard.style.display = formCard.style.display === "none" ? "block" : "none";
+        if (formCard.style.display === "none") {
+            document.getElementById("alignmentForm").reset();
+            document.getElementById("formTitle").innerText = "Registrar Novo Alinhamento / Atualização";
+        }
+    }
+
+    function renderizarAlinhamentos(filtro = '') {
+        const container = document.getElementById("resultsContainer");
+        container.innerHTML = "";
+
+        if (baseAlinhamentos.length === 0) {
+            container.innerHTML = "<p class='loading-text'>Nenhum alinhamento registrado até o momento.</p>";
+            return;
+        }
+
+        const assuntosAgrupados = {};
+
+        baseAlinhamentos.forEach(item => {
+            if (!item.assunto) return;
+            const key = item.assunto.trim().toLowerCase();
+            if (!assuntosAgrupados[key]) {
+                assuntosAgrupados[key] = [];
+            }
+            assuntosAgrupados[key].push(item);
+        });
+
+        const termoBusca = filtro.toLowerCase().trim();
+
+        Object.keys(assuntosAgrupados).forEach((key, index) => {
+            const historico = assuntosAgrupados[key];
+            historico.sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
+
+            const ultimaDecisao = historico[0];
+
+            const bateFiltro = (ultimaDecisao.assunto && ultimaDecisao.assunto.toLowerCase().includes(termoBusca)) || 
+                               (ultimaDecisao.decisao && ultimaDecisao.decisao.toLowerCase().includes(termoBusca)) ||
+                               (ultimaDecisao.motivo && ultimaDecisao.motivo.toLowerCase().includes(termoBusca));
+
+            if (bateFiltro) {
+                const itemDiv = document.createElement("div");
+                itemDiv.className = "alignment-item";
+
+                const dataExibicao = formatarDataSemHora(ultimaDecisao.data);
+
+                let html = `
+                    <div class="alignment-header">
+                        <span>Última atualização: ${dataExibicao} por <b>${ultimaDecisao.responsavel || 'Não informado'}</b></span>
+                        <span class="badge ${historico.length > 1 ? 'badge-update' : ''}">
+                            ${historico.length > 1 ? 'Atualizado (' + historico.length + ' deliberações)' : 'Alinhamento Inicial'}
+                        </span>
+                    </div>
+                    <div class="alignment-subject">${ultimaDecisao.assunto}</div>
+                    <div class="alignment-decision"><b>Decisão Vigente:</b> ${ultimaDecisao.decisao}</div>
+                `;
+
+                if (ultimaDecisao.motivo) {
+                    html += `<div class="alignment-reason"><b>Motivo:</b> ${ultimaDecisao.motivo}</div>`;
+                }
+
+                html += `
+                    <button class="btn btn-secondary" style="font-size:0.8rem; padding: 4px 8px; margin-top:8px;" onclick="prepararAtualizacao('${ultimaDecisao.assunto.replace(/'/g, "\\'")}')">Nova Deliberação / Atualizar</button>
+                `;
+
+                if (historico.length > 1) {
+                    html += `
+                        <div class="history-link" onclick="toggleHistorico('hist_${index}')">📜 Ver Histórico de Deliberações Anteriores (${historico.length - 1})</div>
+                        <div class="history-box" id="hist_${index}">
+                    `;
+
+                    for (let i = 1; i < historico.length; i++) {
+                        const h = historico[i];
+                        const dataHistExibicao = formatarDataSemHora(h.data);
+                        html += `
+                            <div style="margin-top: 10px; font-size: 0.88rem; border-top: 1px solid #eee; padding-top: 5px;">
+                                <div style="color: #777; font-size: 0.78rem;">Em ${dataHistExibicao} por ${h.responsavel || 'Não informado'}:</div>
+                                <div><b>Decisão anterior:</b> ${h.decisao}</div>
+                                ${h.motivo ? '<div style="color:#666;"><i>Motivo:</i> ' + h.motivo + '</div>' : ''}
+                            </div>
+                        `;
+                    }
+
+                    html += `</div>`;
+                }
+
+                itemDiv.innerHTML = html;
+                container.appendChild(itemDiv);
+            }
+        });
+
+        if (container.innerHTML === "") {
+            container.innerHTML = "<p style='color: #777; text-align: center; padding: 20px;'>Nenhum alinhamento encontrado para a pesquisa.</p>";
+        }
+    }
+
+    function buscarAlinhamentos() {
+        const query = document.getElementById("searchInput").value;
+        renderizarAlinhamentos(query);
+    }
+
+    function toggleHistorico(id) {
+        const histBox = document.getElementById(id);
+        histBox.style.display = histBox.style.display === "block" ? "none" : "block";
+    }
+
+    function prepararAtualizacao(assunto) {
+        document.getElementById("assunto").value = assunto;
+        document.getElementById("decisao").value = "";
+        document.getElementById("motivo").value = "";
+        document.getElementById("formTitle").innerText = "Atualizar Decisão sobre: " + assunto;
+        document.getElementById("formCard").style.display = "block";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Envio do formulário
+    document.getElementById("alignmentForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const btnSalvar = document.getElementById("btnSalvar");
+        btnSalvar.disabled = true;
+        btnSalvar.innerText = "Salvando alinhamento...";
+
+        const agora = new Date();
+        const dia = String(agora.getDate()).padStart(2, '0');
+        const mes = String(agora.getMonth() + 1).padStart(2, '0');
+        const ano = agora.getFullYear();
+        const dataApenasData = `${dia}/${mes}/${ano}`;
+
+        const novoItem = {
+            assunto: document.getElementById("assunto").value.trim(),
+            decisao: document.getElementById("decisao").value.trim(),
+            motivo: document.getElementById("motivo").value.trim(),
+            responsavel: document.getElementById("responsavel").value.trim(),
+            data: dataApenasData
+        };
+
+        fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(novoItem)
+        })
+        .then(() => {
+            alert("Alinhamento salvo com sucesso no banco de dados!");
+            document.getElementById("alignmentForm").reset();
+            toggleForm();
+            btnSalvar.disabled = false;
+            btnSalvar.innerText = "Salvar Alinhamento";
+            setTimeout(carregarAlinhamentos, 1500);
+        })
+        .catch(erro => {
+            console.error("Erro ao salvar:", erro);
+            alert("Erro ao salvar o alinhamento. Tente novamente.");
+            btnSalvar.disabled = false;
+            btnSalvar.innerText = "Salvar Alinhamento";
+        });
+    });
+
+    // Carregamento Inicial das Informações ao Abrir a Página
+    window.onload = carregarAlinhamentos;
+</script>
+</body>
+</html>
